@@ -6,7 +6,7 @@ class ProductNumberOption {
     [String]ToString() {
         Return $This.DisplayName
     }
-  }
+}
 function New-ProductNumberOptionItem([String]$DisplayName, [String]$ProductId) {
     $MenuItem = [ProductNumberOption]::new()
     $MenuItem.DisplayName = $DisplayName

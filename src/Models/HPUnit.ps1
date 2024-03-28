@@ -28,7 +28,7 @@ class HPUnit {
                 $this.BiosVersion = $newUnitPart.PartSerialNo;
                 continue;
             }
-            if ($($newUnitPart.PartNumber) -eq "IMAGE_VERSION") {
+            if ($($newUnitPart.PartDescription) -match "DPK, WIN") {
                 $this.ImageVersion = $newUnitPart.PartSerialNo;
                 continue;
             }
@@ -37,7 +37,7 @@ class HPUnit {
                 continue;
             }
 
-            if ($($newUnitPart.PartDescription) -eq "-N/A-" -Or $($newUnitPart.PartDescription) -eq "FEATUREBYTE") {
+            if ($($newUnitPart.PartDescription) -eq "-N/A-" -Or $($newUnitPart.PartDescription) -eq "0" -Or $($newUnitPart.PartDescription) -eq "FEATUREBYTE" -Or $($newUnitPart.PartSerialNo) -match "WIN") {
                 continue;
             }
             $this.UnitConfiguration += $newUnitPart
