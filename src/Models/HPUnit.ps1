@@ -37,7 +37,7 @@ class HPUnit {
                 continue;
             }
 
-            if ($($newUnitPart.PartDescription) -eq "-N/A-" -Or $($newUnitPart.PartDescription) -eq "0" -Or $($newUnitPart.PartDescription) -eq "FEATUREBYTE" -Or $($newUnitPart.PartSerialNo) -match "WIN") {
+            if ($($newUnitPart.PartDescription) -eq "-N/A-" -Or $($newUnitPart.PartDescription) -eq "0" -Or $($newUnitPart.PartDescription) -eq "FEATUREBYTE") {
                 continue;
             }
             $this.UnitConfiguration += $newUnitPart

@@ -29,7 +29,7 @@ while ($true) {
     Write-Host "Bios Version`t: $($Unit.BiosVersion)" -ForegroundColor Cyan
     Write-Host "Image Version`t: $($Unit.ImageVersion)" -ForegroundColor Green
     
-    $Unit.UnitConfiguration | Format-Table @{Label="Part Number"; Expression={"|$($_.PartNumber)"}}, @{Label="`Part Serial Number"; Expression={"|$($_.PartSerialNo)"}; Align='Center'}, @{Label="Component Name"; Expression={"|$($_.PartDescription)"}}
+    $Unit.UnitConfiguration | Format-Table @{Label="Part Number"; Expression={"|$($_.PartNumber)"}; Width=15}, @{Label="`Part Serial Number"; Expression={"|$($_.PartSerialNo)"}; Width=25}, @{Label="Component Name"; Expression={"|$($_.PartDescription)"}}
     
     switch ((Show-Menu -MenuItems (Invoke-Expression [UnitTattoo]::MenuItems)).MenuId)
     {
@@ -37,6 +37,9 @@ while ($true) {
             Clear-Host;
             break 
         }
-        1 { Write-Host "It is two." }
+        1 { 
+            $Tattoo = [UnitTattoo]::new($Unit)
+            $Tattoo.WriteToFile($Config.Efi_Drive)
+         }
     }
 }
