@@ -22,12 +22,17 @@ while ($true) {
     $Unit = [HPUnit]::new($rawUnit)
 
     Write-Host "Serial Number`t: $($Unit.SerialNo)" -ForegroundColor Cyan
-    Write-Host "Product Number`t: $($Unit.ProductNo) [ $($Unit.LanguageCode) ]" -ForegroundColor Cyan
+    Write-Host "Product Number`t: $($Unit.ProductNo) " -ForegroundColor Cyan -NoNewline
+    Write-Host "[$($Unit.LanguageCode)]" -ForegroundColor Green
     Write-Host "Product Name`t: $($Unit.UserName)" -ForegroundColor Cyan
     Write-Host "Build Id`t: $($Unit.BuildId)" -ForegroundColor Cyan
     Write-Host "Feature Byte`t: $($Unit.FeatureByte)" -ForegroundColor Cyan
     Write-Host "Bios Version`t: $($Unit.BiosVersion)" -ForegroundColor Cyan
-    Write-Host "Image Version`t: $($Unit.ImageVersion)" -ForegroundColor Green
+    if ($Unit.ImageVersion -ne '') {
+        Write-Host "Image Version`t: $($Unit.ImageVersion)" -ForegroundColor Green
+    } else {
+        Write-Host "Image Version`t: FreeDos" -ForegroundColor Red
+    }
     
     $Unit.UnitConfiguration | Format-Table @{Label="Part Number"; Expression={"|$($_.PartNumber)"}; Width=15}, @{Label="`Part Serial Number"; Expression={"|$($_.PartSerialNo)"}; Width=25}, @{Label="Component Name"; Expression={"|$($_.PartDescription)"}}
     
