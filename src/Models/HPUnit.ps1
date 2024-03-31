@@ -126,7 +126,6 @@ class UnitPart {
     [string] $PartDescription = $null
     [string] $PartSerialNo = $null
     [string] $PartQuantity = $null
-    [string] $UC_RohsStatusCode = $null
 
     UnitPart($rawUnitPartData) {
         $this.ParentPartNumber = $rawUnitPartData.parent_part_number
@@ -134,7 +133,6 @@ class UnitPart {
         $this.PartDescription = $rawUnitPartData.part_description
         $this.PartSerialNo = $rawUnitPartData.part_serialno
         $this.PartQuantity = $rawUnitPartData.part_quantity
-        $this.UC_rohsStatusCode = $rawUnitPartData.uc_rohs_status_code
     }
     [String]ToString() {
         Return $this.PartDescription

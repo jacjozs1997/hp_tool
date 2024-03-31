@@ -61,7 +61,7 @@ while ($true) {
         Write-Host "Image Version`t: FreeDos" -ForegroundColor Red
     }
     
-    $Unit.UnitConfiguration | Format-Table @{Label="Part Number"; Expression={"|$($_.PartNumber)"}; Width=15}, @{Label="`Part Serial Number"; Expression={"|$($_.PartSerialNo)"}; Width=25}, @{Label="Component Name"; Expression={"|$($_.PartDescription)"}}
+    $Unit.UnitConfiguration | Format-Table @{Label="Part Number"; Expression={"|$($_.PartNumber)"}; Width=15}, @{Label="Part Serial Number"; Expression={"|$($_.PartSerialNo)"}; Width=25}, @{Label="Component Name"; Expression={"|$($_.PartDescription)"}}, @{Label="Quantity"; Expression={"$($_.PartQuantity)"; Align="Center"}}
     
     switch ((Show-Menu -MenuItems (Invoke-Expression [UnitTattoo]::MenuItems)).MenuId)
     {
@@ -75,6 +75,6 @@ while ($true) {
             $Tattoo.WriteToFile($Config.Efi_Drive)
             Pause
             Clear-Host;
-         }
+        }
     }
 }
