@@ -84,6 +84,12 @@ class HPUnit {
         $this.ProductNo = $rawUnitData.Body.SerialNumberBOM.wwsnrsinput.product_no
         $this.UserName = $rawUnitData.Body.SerialNumberBOM.wwsnrsinput.user_name
 
+        if ($this.ProductNo.Contains('#')) {
+            $array = $this.ProductNo.Split('#')
+            $this.ProductNo = $array[0];
+            $this.LanguageCode = $array[1];
+        }
+
         foreach ($unit_part in $rawUnitData.Body.SerialNumberBOM.unit_configuration)
         {
             $newUnitPart = [UnitPart]::new($unit_part)

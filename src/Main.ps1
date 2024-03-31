@@ -7,7 +7,18 @@ Import-Module '.\src\Modules\PSMenu\0.2.0\PSMenu.psm1'
 $Config = [Config]::new()
 $Unit = $null
 $ApiRequest = [ApiRequest]::new($Config.APIServer)
-
+$ImageIp = '10.222.245.225'
+$ImageDrive = 'Z'
+$ImagesPath = 'images\bios'
+#TOTO Test
+# if (!(Test-Path -Path "$($ImageDrive):\")) {
+#     try {
+#         New-SmbMapping -LocalPath "$($ImageDrive):" -RemotePath "\\$ImageIp\$ImagesPath" -UserName 'readshare' -Password 'rs'
+#     }
+#     catch {
+#         Write-Host $_
+#     }
+# }
 while ($true) {
     Write-Host "----------------`t-----------------------------------------"
     $readSerialNumber = Read-Host "SERIAL NUMBER`t"
@@ -25,11 +36,27 @@ while ($true) {
     Write-Host "Product Number`t: $($Unit.ProductNo) " -ForegroundColor Cyan -NoNewline
     Write-Host "[$($Unit.LanguageCode)]" -ForegroundColor Green
     Write-Host "Product Name`t: $($Unit.UserName)" -ForegroundColor Cyan
-    Write-Host "Build Id`t: $($Unit.BuildId)" -ForegroundColor Cyan
-    Write-Host "Feature Byte`t: $($Unit.FeatureByte)" -ForegroundColor Cyan
-    Write-Host "Bios Version`t: $($Unit.BiosVersion)" -ForegroundColor Cyan
+    if ($Unit.BuildId -ne "") {
+        Write-Host "Build Id`t: $($Unit.BuildId)" -ForegroundColor Cyan
+    }
+    if ($Unit.FeatureByte -ne "") {
+        Write-Host "Feature Byte`t: $($Unit.FeatureByte)" -ForegroundColor Cyan
+    }
+    if ($Unit.BiosVersion -ne "") {
+        Write-Host "Bios Version`t: $($Unit.BiosVersion)" -ForegroundColor Cyan
+    }
+
     if ($Unit.ImageVersion -ne '') {
         Write-Host "Image Version`t: $($Unit.ImageVersion)" -ForegroundColor Green
+        if (Test-Path -Path "$($drive):\") {
+            if (Test-Path -Path "$($ImageDrive):$($ImagesPath)\$($Unit.ProductNo)#$($Unit.LanguageCode).rdr") {
+                Write-Host "Image exists" -ForegroundColor Blue
+            } else {
+                Write-Host "Image not exists" -ForegroundColor Red
+            }
+        } else {
+            Write-Host "Image server not available" -ForegroundColor Red
+        }
     } else {
         Write-Host "Image Version`t: FreeDos" -ForegroundColor Red
     }
