@@ -9,6 +9,7 @@ class UnitTattoo {
     [string] $FeatureByte = $null     # DONE 2
     [string] $KeyboardId = $null     # DONE 2
     [string] $SystemFamily = "HP"     # !
+    [UnitTattooType] $Type = [UnitTattooType]::None
 
     static [string] $EfiPath = "\EFI\Boot"
     static [string] $EfiFile = "bios.txt"
@@ -95,11 +96,27 @@ class UnitTattoo {
     [string]GetTattooText() {
         $result = '';
         
-        $result 
+        $result += "Serial Number`n`t$($this.SerialNumber)"
+        $result += "Feature Byte`n`t$($this.FeatureByte)"
+        $result += "Build ID`n`t$($this.BuildId)"
+        $result += "Product Name`n`t$($this.ProductName)"
+        $result += "System Family`n`t$($this.SystemFamily)"
 
+        $result += "SKU Number`n`t$($this.ProductNumber)"
+        $result += "Product Number`n`t$($this.ProductNumber)"
+
+        $result += "Keyboard Type`n`t$($this.KeyboardId)"
 
         return $result;
     }
+}
+
+[Flags()] enum UnitTattooType {
+    None = 0
+    Laptop = 1
+    PC = 2
+    KeyboardTypeId = 4
+    KeyboardTypeText = 8
 }
 
 class UnitTattooOption {
