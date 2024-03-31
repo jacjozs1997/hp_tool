@@ -9,7 +9,7 @@ $Unit = $null
 $ApiRequest = [ApiRequest]::new($Config.APIServer)
 $ImageIp = '10.222.245.225'
 $ImageDrive = 'Z'
-$ImagesPath = 'images\bios'
+$ImagesPath = 'images'
 #TOTO Test
 # if (!(Test-Path -Path "$($ImageDrive):\")) {
 #     try {
