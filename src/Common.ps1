@@ -6,6 +6,7 @@ function Progress {
     )
     $spinner = @("-----","\\\\\","|||||","/////")
     $oldPos = $host.UI.RawUI.CursorPosition
+    [System.Console]::CursorVisible = $False
     do { 
         $spin = 0
         do {
@@ -17,5 +18,6 @@ function Progress {
     }
     while ((Get-Job -name $jobName).State -eq "Running")
     $host.UI.RawUI.CursorPosition = $oldPos
+    [System.Console]::CursorVisible = $True
     Write-Host "                                                 "
 }

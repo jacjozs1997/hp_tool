@@ -43,8 +43,11 @@ while ($true) {
             break 
         }
         1 { 
+            Clear-Host;
             $Tattoo = [UnitTattoo]::new($Unit)
             $Tattoo.WriteToFile($Config.Efi_Drive)
+            Pause
+            Clear-Host;
          }
     }
 }

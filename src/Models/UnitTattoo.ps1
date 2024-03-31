@@ -1,3 +1,5 @@
+
+. .\src\Common.ps1
 . .\src\Models\HPUnit.ps1
 class UnitTattoo {
     [string] $SerialNumber = $null    # DONE 1
@@ -5,16 +7,20 @@ class UnitTattoo {
     [string] $ProductName = $null     # DONE 5
     [string] $BuildId = $null         # DONE 4
     [string] $FeatureByte = $null     # DONE 2
+    [string] $KeyboardId = $null     # DONE 2
     [string] $SystemFamily = "HP"     # !
 
+    static [string] $EfiPath = "\EFI\Boot"
+    static [string] $EfiFile = "bios.txt"
+
     static $MenuItems = @(
-        $(New-UnitTattooOptionItem -DisplayName "New unit search" -MenuId 0),
-        $(New-UnitTattooOptionItem -DisplayName "Write to file" -MenuId 1)
+        $([UnitTattooOption]::new("New unit search", 0)),
+        $([UnitTattooOption]::new("Write to file", 1))
     )
 
     static $KeyboardTypeItems = @(
-        $(New-UnitKeyboardTypeOptionItem -DisplayName "New unit search" -KeyboardId 0),
-        $(New-UnitKeyboardTypeOptionItem -DisplayName "New unit search" -KeyboardId 0)
+        $([UnitKeyboardTypeOption]::new("Type 1", 00)),
+        $([UnitKeyboardTypeOption]::new("Type 2", 01))
     )
 
     UnitTattoo([PSCustomObject] $unit) {
@@ -34,26 +40,59 @@ class UnitTattoo {
             Write-Error "Bad User Config in efi drive" -ForegroundColor Red
             exit
         }
-        if (Test-Path "$($drive):\EFI\Boot\bios.txt" -PathType Leaf) {
-            Write-Host "The specified drive could not be found." -ForegroundColor Green
-        } else {
+        if (!(Test-Path -Path "$($drive):\")) {
             Write-Host "`nThe specified drive could not be found.`n" -ForegroundColor Red
-            Write-Host "Select a drive.`n" -ForegroundColor Green
-            $drive = "None"
-            while ($drive -eq "None") {
-                $usbs = Get-Volume | Where-Object -FilterScript {$_.DriveType -Eq "Removable"}
-                $Opts = @($(New-UsbDriveOptionItem -DisplayName "Update" -Drive "None"))
-                foreach ($usb in $usbs) {
-                    $Opts += $(New-UsbDriveOptionItem -DisplayName $usb.FileSystemLabel -Drive $usb.DriveLetter)
-                }
-                $drive = (Show-Menu -MenuItems $Opts).Drive
+
+            try {
+                $drive = "None"
+                while ($drive -eq "None") {
+                    Start-Job -Name HP_SelectDrive -ScriptBlock {
+                        Write-Host "Select a drive.`n" -ForegroundColor Green
+                        try {
+                            $result = Get-Volume | Where-Object -FilterScript {$_.DriveType -Eq "Removable"}
+                        }
+                        catch {
+                            $result = $_
+                        }
+                        return $result;
+                    } | Receive-Job
+                    
+                    Progress -Title "Searching drives..." -JobName HP_SelectDrive
                 
-                Clear-Host
+                    $usbs = Receive-Job -Id (Get-Job -Name HP_SelectDrive).Id
+                    $Opts = @($([UsbDriveOption]::new("Update", "None")))
+                    foreach ($usb in $usbs) {
+                        $Opts += $([UsbDriveOption]::new("$($usb.DriveLetter):$($usb.FileSystemLabel)", $usb.DriveLetter))
+                    }
+                    $drive = (Show-Menu -MenuItems $Opts).Drive
+                    
+                    Clear-Host
+                }
+            }
+            catch {
+                $drive = $_
             }
         }
+        
+        Write-Host "Selected drive: $($drive):\";
+
+        if (!(Test-Path -Path "$($drive):$([UnitTattoo]::EfiPath)")) {
+            New-Item -ItemType "directory" -Path "$($drive):$([UnitTattoo]::EfiPath)"
+            Write-Host "Create folder: $($drive):$([UnitTattoo]::EfiPath)";
+        }
+        # TODO Condition
+        $this.KeyboardId = $this.SelectKeyboardType();
+        $this.GetTattooText() | Out-File -FilePath "$($drive):$([UnitTattoo]::EfiPath)\$([UnitTattoo]::EfiFile)"
+        
+        Write-Host "Create file: $($drive):$([UnitTattoo]::EfiPath)\$([UnitTattoo]::EfiFile)";
     }
 
-    [String]ToString() {
+    [string]SelectKeyboardType() {
+        Write-Host "Select keyboard type:";
+        return (Show-Menu -MenuItems (Invoke-Expression [UnitTattoo]::KeyboardTypeItems)).KeyboardId
+    }
+
+    [string]GetTattooText() {
         $result = '';
         
         $result 
@@ -67,49 +106,43 @@ class UnitTattooOption {
   
     [String]$DisplayName
     [String]$MenuId
+
+    UnitTattooOption([string]$DisplayName, [string]$MenuId) {
+        $this.DisplayName = $DisplayName;
+        $this.MenuId = $MenuId;
+    }
   
     [String]ToString() {
         Return $This.DisplayName
     }
-}
-
-function New-UnitTattooOptionItem([String]$DisplayName, [String]$MenuId) {
-    $MenuItem = [UnitTattooOption]::new()
-    $MenuItem.DisplayName = $DisplayName
-    $MenuItem.MenuId = $MenuId
-    Return $MenuItem
 }
 
 class UsbDriveOption {
-  
+          
     [String]$DisplayName
     [String]$Drive
+
+    UsbDriveOption([string]$DisplayName, [string]$Drive) {
+        $this.DisplayName = $DisplayName;
+        $this.Drive = $Drive;
+    }
   
     [String]ToString() {
         Return $This.DisplayName
     }
-}
-
-function New-UsbDriveOptionItem([String]$DisplayName, [String]$Drive) {
-    $MenuItem = [UsbDriveOption]::new()
-    $MenuItem.DisplayName = $DisplayName
-    $MenuItem.Drive = $Drive
-    Return $MenuItem
 }
 
 class UnitKeyboardTypeOption {
   
     [String]$DisplayName
     [String]$KeyboardId
+
+    UnitKeyboardTypeOption([string]$DisplayName, [string]$KeyboardId) {
+        $this.DisplayName = $DisplayName;
+        $this.KeyboardId = $KeyboardId;
+    }
   
     [String]ToString() {
         Return $This.DisplayName
     }
-}
-
-function New-UnitKeyboardTypeOptionItem([String]$DisplayName, [String]$KeyboardId) {
-    $MenuItem = [UnitKeyboardTypeOption]::new()
-    $MenuItem.DisplayName = $DisplayName
-    $MenuItem.KeyboardId = $KeyboardId
-    Return $MenuItem
 }
