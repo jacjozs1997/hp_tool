@@ -2,14 +2,24 @@
 . .\src\Common.ps1
 . .\src\Models\HPUnit.ps1
 class UnitTattoo {
-    [string] $SerialNumber = $null    # DONE 1
-    [string] $ProductNumber = $null   # DONE 3
-    [string] $ProductName = $null     # DONE 5
-    [string] $BuildId = $null         # DONE 4
-    [string] $FeatureByte = $null     # DONE 2
-    [string] $KeyboardId = $null     # DONE 2
-    [string] $SystemFamily = "HP"     # !
-    [UnitTattooType] $Type = [UnitTattooType]::None
+    [string] $SerialNumber = $null
+    [string] $ProductNumber = $null
+    [string] $ProductName = $null
+    [string] $BuildId = $null
+    [string] $FeatureByte = $null
+    [string] $KeyboardId = $null
+    [string] $SystemFamily = "HP"
+
+    [hashtable]$AnalizeTattooProps = @{
+        "Serial Number" = $([TattooProperty]::new("Serial Number", 'None'))
+        "Feature Byte" = $([TattooProperty]::new("Feature Byte", 'None'))
+        "SKU Number" = $([TattooProperty]::new("SKU Number", 'None'))
+        "Product Number" = $([TattooProperty]::new("Product Number", 'None'))
+        "Build ID" = $([TattooProperty]::new("Build ID", 'None'))
+        "Product Name" = $([TattooProperty]::new("Product Name", 'None'))
+        "System Family" = $([TattooProperty]::new("System Family", 'None'))
+        "Keyboard Type" = $([TattooProperty]::new("Keyboard Type", 'None'))
+    }
 
     static [string] $EfiPath = "\EFI\Boot"
     static [string] $EfiFile = "bios.txt"
@@ -19,7 +29,7 @@ class UnitTattoo {
         $([UnitTattooOption]::new("Write to file", 1))
     )
 
-    static $KeyboardTypeItems = @(
+    static $DefaultKeyboardTypeItems = @(
         $([UnitKeyboardTypeOption]::new("Type 1", 00)),
         $([UnitKeyboardTypeOption]::new("Type 2", 01))
     )
@@ -81,46 +91,131 @@ class UnitTattoo {
             New-Item -ItemType "directory" -Path "$($drive):$([UnitTattoo]::EfiPath)"
             Write-Host "Create folder: $($drive):$([UnitTattoo]::EfiPath)";
         }
-        # TODO Condition
-        $this.KeyboardId = $this.SelectKeyboardType();
+        $this.AnalizeTattooFile($drive);
         $this.GetTattooText() | Out-File -FilePath "$($drive):$([UnitTattoo]::EfiPath)\$([UnitTattoo]::EfiFile)"
         
         Write-Host "Create file: $($drive):$([UnitTattoo]::EfiPath)\$([UnitTattoo]::EfiFile)";
     }
 
-    [string]SelectKeyboardType() {
+    [void]AnalizeTattooFile([string]$drive) {
+        [TattooProperty] $prop = $null;
+        foreach ($line in Get-Content "$($drive):$([UnitTattoo]::EfiPath)\$([UnitTattoo]::EfiFile)") {
+
+            if ($line.Contains("`t")) {
+                if ($prop) {
+                    [string]$option = $line.Replace("`t", "")
+                    if ($option.StartsWith('*')) {
+                        $option = $option.Substring(1)
+                    }
+                    if ($prop.OptionalValues.Count -eq 0) {
+                        if ($prop.Value -ne "None") {
+                            $prop.OptionalValues += $prop.Value
+                            $prop.OptionalValues += $option
+                        } else {
+                            $prop.Value = $option;
+                        }
+                    } else {
+                        $prop.OptionalValues += $option
+                    }
+                }
+            } elseif ($this.AnalizeTattooProps.Contains($line)) {
+                $prop = $this.AnalizeTattooProps[$line]
+            } else {
+                continue
+            }
+        }
+        $props = $this.AnalizeTattooProps.Values
+        foreach ($tattooProp in $this.AnalizeTattooProps.Values) {
+            if ($tattooProp.Value -eq "None") {
+                continue
+            }
+            switch ($tattooProp.Name) {
+                "Serial Number" { 
+                    $tattooProp.Value = $this.SerialNumber;
+                    break;
+                }
+                "Feature Byte" { 
+                    $tattooProp.Value = $this.FeatureByte;
+                    break;
+                }
+                "SKU Number" { 
+                    $tattooProp.Value = $this.ProductNumber;
+                    break;
+                }
+                "Product Number" { 
+                    $tattooProp.Value = $this.ProductNumber;
+                    break;
+                }
+                "Build ID" { 
+                    $tattooProp.Value = $this.BuildId;
+                    break;
+                }
+                "Product Name" { 
+                    $tattooProp.Value = $this.ProductName;
+                    break;
+                }
+                "System Family" { 
+                    $tattooProp.Value = $this.SystemFamily;
+                    break;
+                }
+                "Keyboard Type" { 
+                    $tattooProp.Value = $this.SelectKeyboardType($tattooProp.OptionalValues);
+                    break;
+                }
+            }
+        }
+    }
+
+    [string]SelectKeyboardType([array] $types) {
         Write-Host "Select keyboard type:";
-        return (Show-Menu -MenuItems (Invoke-Expression [UnitTattoo]::KeyboardTypeItems)).KeyboardId
+        $Ops = @();
+        foreach ($type in $types) {
+            $Ops += [UnitKeyboardTypeOption]::new($type, 0)
+        }
+        if ($Ops.Count -gt 0) {
+            return (Show-Menu -MenuItems $Ops).DisplayName
+        } else {
+            return '{0:d2}' -f [int]$((Show-Menu -MenuItems (Invoke-Expression [UnitTattoo]::DefaultKeyboardTypeItems)).KeyboardId)
+        }
     }
 
     [string]GetTattooText() {
         $result = '';
         
-        $result += "Serial Number`n`t$($this.SerialNumber)"
-        $result += "Feature Byte`n`t$($this.FeatureByte)"
-        $result += "Build ID`n`t$($this.BuildId)"
-        $result += "Product Name`n`t$($this.ProductName)"
-        $result += "System Family`n`t$($this.SystemFamily)"
-
-        $result += "SKU Number`n`t$($this.ProductNumber)"
-        $result += "Product Number`n`t$($this.ProductNumber)"
-
-        $result += "Keyboard Type`n`t$($this.KeyboardId)"
-
-        return $result;
+        foreach ($prop in $this.AnalizeTattooProps.Values) {
+            if ($prop.Value -ne "None") {
+                $result += "$($prop.Name)`r`n";
+                if ($prop.OptionalValues.Count -gt 0) {
+                    foreach ($option in $prop.OptionalValues) {
+                        if ($option -eq $prop.Value) {
+                            $result += "`t*$option`r`n";
+                        } else {
+                            $result += "`t$option`r`n";
+                        }
+                    }
+                } else {
+                    $result += "`t$($prop.Value)`r`n";
+                }
+            }
+        }
+        return $result.Substring(0, $result.Length-2)
     }
 }
 
-[Flags()] enum UnitTattooType {
-    None = 0
-    Laptop = 1
-    PC = 2
-    KeyboardTypeId = 4
-    KeyboardTypeText = 8
+class TattooProperty {
+    [String]$Name
+    [String]$Value
+    [Array]$OptionalValues
+
+    TattooProperty([string]$Name, [string]$Value) {
+        $this.Name = $Name;
+        $this.Value = $Value;
+        $this.OptionalValues = @();
+    }
 }
 
 class UnitTattooOption {
-  
+    
     [String]$DisplayName
     [String]$MenuId
 
@@ -128,14 +223,14 @@ class UnitTattooOption {
         $this.DisplayName = $DisplayName;
         $this.MenuId = $MenuId;
     }
-  
+    
     [String]ToString() {
         Return $This.DisplayName
     }
 }
 
 class UsbDriveOption {
-          
+
     [String]$DisplayName
     [String]$Drive
 
@@ -143,7 +238,7 @@ class UsbDriveOption {
         $this.DisplayName = $DisplayName;
         $this.Drive = $Drive;
     }
-  
+
     [String]ToString() {
         Return $This.DisplayName
     }
@@ -152,9 +247,9 @@ class UsbDriveOption {
 class UnitKeyboardTypeOption {
   
     [String]$DisplayName
-    [String]$KeyboardId
+    [int]$KeyboardId
 
-    UnitKeyboardTypeOption([string]$DisplayName, [string]$KeyboardId) {
+    UnitKeyboardTypeOption([string]$DisplayName, [int]$KeyboardId) {
         $this.DisplayName = $DisplayName;
         $this.KeyboardId = $KeyboardId;
     }
