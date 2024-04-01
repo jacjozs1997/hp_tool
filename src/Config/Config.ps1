@@ -1,6 +1,6 @@
 class Config {
     [string] $Efi_Drive
-    [bool] $WriteToEfiBoot
+    [bool] $OnlyWriteToEfiBoot
     [bool] $ImageEnabled
     [string] $APIServer
 
@@ -9,7 +9,7 @@ class Config {
             $userConfig = (Get-Content -Path ".\config.json" -Raw | ConvertFrom-Json)
 
             $this.Efi_Drive = $userConfig.Efi_Drive
-            $this.WriteToEfiBoot = $userConfig.WriteToEfiBoot
+            $this.OnlyWriteToEfiBoot = $userConfig.OnlyWriteToEfiBoot
             $this.ImageEnabled = $userConfig.ImageEnabled
             $this.APIServer = $userConfig.APIServer
         }

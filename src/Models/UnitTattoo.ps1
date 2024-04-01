@@ -124,7 +124,6 @@ class UnitTattoo {
                 continue
             }
         }
-        $props = $this.AnalizeTattooProps.Values
         foreach ($tattooProp in $this.AnalizeTattooProps.Values) {
             if ($tattooProp.Value -eq "None") {
                 continue
