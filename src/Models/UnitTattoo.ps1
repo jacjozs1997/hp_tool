@@ -101,7 +101,7 @@ class UnitTattoo {
         [TattooProperty] $prop = $null;
         foreach ($line in Get-Content "$($drive):$([UnitTattoo]::EfiPath)\$([UnitTattoo]::EfiFile)") {
 
-            if ($line.Contains("`t")) {
+            if ($line.StartsWith("`t")) {
                 if ($prop) {
                     [string]$option = $line.Replace("`t", "")
                     if ($option.StartsWith('*')) {
@@ -121,6 +121,7 @@ class UnitTattoo {
             } elseif ($this.AnalizeTattooProps.Contains($line)) {
                 $prop = $this.AnalizeTattooProps[$line]
             } else {
+                $prop = $null
                 continue
             }
         }
@@ -197,7 +198,7 @@ class UnitTattoo {
                 }
             }
         }
-        return $result.Substring(0, $result.Length-2)
+        return $result.Substring(0, $result.Length - 2)
     }
 }
 

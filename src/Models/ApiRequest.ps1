@@ -69,6 +69,21 @@ class ApiRequest {
                 $ProductNumber,
                 $Header)
             try {
+              Invoke-WebRequest -Uri $ApiServer/partsurferapi/SerialNumber/GetSerialNumber/$SerialNumber/country/US/usertype/EXT -Method Options -Headers @{
+                    "Accept" = "*/*"
+                    "Accept-Encoding" = "gzip, deflate, br, zstd"
+                    "Accept-Language" = "hu,hu-HU;q=0.9,en;q=0.8"
+                    "Access-Control-Request-Headers" = "authorization"
+                    "Access-Control-Request-Method" = "GET"
+                    "Cache-Control"="no-cache"
+                    "Origin"="https://partsurfer.hp.com"
+                    "Pragma"="no-cache"
+                    "Referer"="https://partsurfer.hp.com/"
+                    "Sec-Fetch-Dest"="empty"
+                    "Sec-Fetch-Mode"="cors"
+                    "Sec-Fetch-Site"="same-site"
+                    "User-Agent"="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+                }
                 $result = (Invoke-WebRequest -Uri $ApiServer/partsurferapi/SerialNumber/GetSerialNumber/$SerialNumber/ProductNumber/$ProductNumber/country/US/usertype/EXT -Method Get -Headers $Header).Content | ConvertFrom-Json
             }
             catch {

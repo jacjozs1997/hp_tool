@@ -10,7 +10,7 @@ $Unit = $null
 $ImageIp = '10.222.245.225'
 $ImageDrive = 'Z'
 $ImagesPath = 'images'
-#TOTO Test
+#TODO Test
 if ($Config.ImageEnabled) {
     if (!(Test-Path -Path "$($ImageDrive):\")) {
         Start-Job -Name ConImageServer -ScriptBlock { 
